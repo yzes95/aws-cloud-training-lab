@@ -1,10 +1,7 @@
-"""AWS Cloud Training Lab - Interactive API.
-
-A standalone FastAPI project designed for hands-on learning, testing, and experimenting
-with individual Amazon Web Services (AWS) and Docker fundamentals using Swagger UI.
-"""
-from fastapi import FastAPI
+"""AWS Cloud Training Lab - Interactive Service API."""
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from core.config import settings
 from modules.iam import router as iam_router
 from modules.ec2_security import router as ec2_router
@@ -16,65 +13,34 @@ from modules.docker_lab import router as docker_router
 from modules.advanced_compute import router as advanced_router
 
 tags_metadata = [
-    {
-        "name": "Health",
-        "description": "Lab runtime health check, active AWS mode (Mock vs Real AWS), and environment details."
-    },
-    {
-        "name": "🔐 IAM & Least Privilege",
-        "description": "High Priority: IAM Users vs Roles, Policies evaluation, Principle of Least Privilege, STS Temporary Credentials (`ASIA`), and static credential leak audit."
-    },
-    {
-        "name": "🖥️ EC2 & Security Groups",
-        "description": "High Priority: Stateful Security Group rule simulation, Ingress/Egress packet filtering, IMDSv2 token session defense, and EC2 compute families/pricing."
-    },
-    {
-        "name": "🔑 Secrets & Environment Variables",
-        "description": "High Priority: SSM Parameter Store, AWS Secrets Manager with automated rotation, and comparison against plain `.env` files."
-    },
-    {
-        "name": "🪣 S3 Object Storage",
-        "description": "Medium Priority: Bucket operations, versioning, Block Public Access, presigned URLs (direct client upload), and Storage Classes lifecycle."
-    },
-    {
-        "name": "📊 CloudWatch & Logs",
-        "description": "Medium Priority: Structured JSON logging, custom metrics with multidimensional tagging, and CloudWatch Metric Alarms with SNS notification dispatch."
-    },
-    {
-        "name": "🌐 VPC & Cloud Networking",
-        "description": "Medium Priority: Subnet CIDR calculation (AWS 5 reserved IPs), Route Tables, Internet Gateway (IGW) vs NAT Gateway, and free S3 Gateway Endpoints."
-    },
-    {
-        "name": "🐳 Docker Fundamentals & Containers",
-        "description": "Refresher: Images vs Containers, Container port mapping (`-p host:container`), multi-stage Dockerfiles, layer caching, and dev-vs-prod consistency."
-    },
-    {
-        "name": "🚀 Advanced Compute: ECS, Fargate & Kubernetes",
-        "description": "Low Priority: ECS on EC2 vs Serverless Fargate vs EKS, ECS Task Definition generation, Task Role vs Execution Role, and Docker-to-Kubernetes analogies."
-    },
+    {"name": "Health", "description": "Lab runtime health check."},
+    {"name": "🔐 IAM & Least Privilege", "description": "IAM Users, Roles, Policies, STS, and Credentials Security."},
+    {"name": "🖥️ EC2 & Security Groups", "description": "Security Groups, Stateful filtering, and IMDSv2."},
+    {"name": "🔑 Secrets & Environment Variables", "description": "SSM Parameter Store and AWS Secrets Manager."},
+    {"name": "🪣 S3 Object Storage", "description": "S3 Buckets, Uploads, Presigned URLs, and Storage Classes."},
+    {"name": "📊 CloudWatch & Logs", "description": "CloudWatch Logs, Custom Metrics, and Alarms."},
+    {"name": "🌐 VPC & Cloud Networking", "description": "Subnets, CIDR calculation, Route Tables, and Endpoints."},
+    {"name": "🐳 Docker Fundamentals & Containers", "description": "Docker images, containers, ports, and Dockerfiles."},
+    {"name": "🚀 Advanced Compute: ECS, Fargate & Kubernetes", "description": "ECS Task Definitions and Orchestration concepts."},
 ]
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="""
-# ☁️ AWS Cloud Training Lab & Service Playground
-
-Welcome to your hands-on AWS training project! This application allows you to write, test,
-and experiment with individual AWS services one-by-one with **zero frontend needed** — simply use the interactive
-Swagger UI (`/docs`) below.
-
-### 🎯 Key Capabilities:
-- **Dual Testing Mode**: Run offline for **100% FREE** with built-in mock simulation, or connect to **LocalStack** or **Real AWS** by toggling `AWS_MOCK_MODE` in `.env`.
-- **Architectural Link to Ataa Donation Platform**: Every module demonstrates the exact patterns used in the Ataa production architecture (e.g. S3 presigned URLs for family medical receipts, EC2 Instance Profiles for zero hardcoded keys, and CloudWatch telemetry).
-- **Curated AWS CCP & SAA Topics**: Directly covers IAM, EC2, Security Groups, VPC, S3, Secrets Manager, CloudWatch, and Docker fundamentals.
-    """,
+    description="Interactive Swagger UI for writing and testing AWS service integrations one-by-one.",
     version=settings.VERSION,
     openapi_tags=tags_metadata,
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# CORS Middleware (allows local Swagger UI and API tools like Postman/cURL)
+# Custom exception handler for unimplemented TODO service stubs
+@app.exception_handler(NotImplementedError)
+def not_implemented_handler(request: Request, exc: NotImplementedError):
+    return JSONResponse(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        content={"detail": str(exc), "status": "TODO"}
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -86,19 +52,18 @@ app.add_middleware(
 
 @app.get("/health", tags=["Health"])
 def health_check():
-    """Health check endpoint showing current lab configuration and active AWS connection mode."""
+    """Health check endpoint showing current lab configuration."""
     return {
         "status": "healthy",
         "app_name": settings.APP_NAME,
         "environment": settings.APP_ENV,
-        "aws_mode": "Offline Mock Simulation (Free)" if settings.AWS_MOCK_MODE else "Live AWS / LocalStack",
         "aws_region": settings.AWS_REGION,
+        "localstack_target": settings.LOCALSTACK_ENDPOINT_URL or "disabled (targeting real AWS)",
         "swagger_docs": "/docs",
         "redoc_docs": "/redoc"
     }
 
 
-# Include all AWS training routers
 app.include_router(iam_router)
 app.include_router(ec2_router)
 app.include_router(secrets_router)

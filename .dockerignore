@@ -1,16 +1,12 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.env
-.git
-.gitignore
-.pytest_cache/
-.coverage
-htmlcov/
-localstack_data/
-*.md
+# ==========================================
+# TODO: Define your .dockerignore here
+# ==========================================
+# Suggested exclusions:
+# __pycache__
+# *.py[cod]
+# .venv
+# venv
+# .env
+# .git
+# .pytest_cache
+# *.md

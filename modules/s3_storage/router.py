@@ -1,60 +1,34 @@
+from typing import Any, Dict
 from fastapi import APIRouter
 from .schemas import (
     CreateBucketRequest,
-    CreateBucketResponse,
     PresignedUrlRequest,
-    PresignedUrlResponse,
-    StorageClassesResponse,
     UploadObjectRequest,
-    UploadObjectResponse,
 )
 from .service import s3_service
 
 router = APIRouter(prefix="/api/v1/s3", tags=["🪣 S3 Object Storage"])
 
 
-@router.post(
-    "/create-bucket",
-    summary="Create S3 Bucket with Versioning & Public Block",
-    response_model=CreateBucketResponse
-)
-def create_bucket(request: CreateBucketRequest):
-    """Creates a secure S3 bucket following AWS best practices:
-    - S3 Block Public Access enabled
-    - Object Versioning enabled
-    - Default SSE-S3 encryption applied
-    """
+@router.post("/create-bucket", summary="Create S3 Bucket with Versioning & Public Block")
+def create_bucket(request: CreateBucketRequest) -> Dict[str, Any]:
+    """Create S3 bucket using boto3."""
     return s3_service.create_bucket(request)
 
 
-@router.post(
-    "/upload-object",
-    summary="Upload Object with Metadata Tags",
-    response_model=UploadObjectResponse
-)
-def upload_object(request: UploadObjectRequest):
-    """Uploads an object (document/file) to an S3 bucket with user-defined metadata and server-side encryption."""
+@router.post("/upload-object", summary="Upload Object to S3")
+def upload_object(request: UploadObjectRequest) -> Dict[str, Any]:
+    """Upload an object with metadata using boto3."""
     return s3_service.upload_object(request)
 
 
-@router.post(
-    "/generate-presigned-url",
-    summary="Generate S3 Presigned URL for Direct Browser Upload/Download",
-    response_model=PresignedUrlResponse
-)
-def generate_presigned_url(request: PresignedUrlRequest):
-    """Generates a secure, temporary presigned URL:
-    - Allows frontend browser clients to upload files directly to S3 without sending file bytes through FastAPI!
-    - Completely eliminates exposing AWS secret keys to clients
-    """
+@router.post("/generate-presigned-url", summary="Generate Presigned URL for Direct Upload/Download")
+def generate_presigned_url(request: PresignedUrlRequest) -> Dict[str, Any]:
+    """Generate temporary presigned URL."""
     return s3_service.generate_presigned_url(request)
 
 
-@router.get(
-    "/storage-classes",
-    summary="S3 Storage Classes & Lifecycle Rules Guide",
-    response_model=StorageClassesResponse
-)
-def get_storage_classes():
-    """Returns an interactive guide comparing S3 Standard, Intelligent-Tiering, Standard-IA, Glacier, and Deep Archive."""
+@router.get("/storage-classes", summary="S3 Storage Classes & Lifecycle Rules Summary")
+def get_storage_classes() -> Dict[str, Any]:
+    """Summary of S3 storage classes and lifecycle strategies."""
     return s3_service.get_storage_classes_guide()

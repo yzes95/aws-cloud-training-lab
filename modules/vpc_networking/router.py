@@ -1,49 +1,24 @@
+from typing import Any, Dict
 from fastapi import APIRouter
-from .schemas import (
-    PacketRouteRequest,
-    PacketRouteResponse,
-    SubnetCalculationRequest,
-    SubnetCalculationResponse,
-    VpcEndpointsGuideResponse,
-)
+from .schemas import PacketRouteRequest, SubnetCalculationRequest
 from .service import vpc_service
 
 router = APIRouter(prefix="/api/v1/vpc", tags=["🌐 VPC & Cloud Networking"])
 
 
-@router.post(
-    "/calculate-subnets",
-    summary="Subnet CIDR Calculator: Reserved vs Usable IP Addresses",
-    response_model=SubnetCalculationResponse
-)
-def calculate_subnets(request: SubnetCalculationRequest):
-    """Calculates usable vs AWS-reserved IP addresses for any CIDR block:
-    - Demonstrates why AWS reserves 5 IP addresses per subnet (.0, .1, .2, .3, .255)
-    - Key topic for AWS Certified Cloud Practitioner and Solutions Architect exams
-    """
+@router.post("/calculate-subnets", summary="Subnet CIDR Calculator & AWS 5 Reserved IPs")
+def calculate_subnets(request: SubnetCalculationRequest) -> Dict[str, Any]:
+    """Calculate total vs usable IP addresses."""
     return vpc_service.calculate_subnet_ips(request)
 
 
-@router.post(
-    "/route-packet",
-    summary="Trace Network Packet Path (IGW vs NAT Gateway vs VPC Endpoints)",
-    response_model=PacketRouteResponse
-)
-def route_packet(request: PacketRouteRequest):
-    """Traces packet flow from public or private subnets to Internet, S3, or RDS:
-    - Demonstrates when a NAT Gateway is required for private compute
-    - Demonstrates how S3 Gateway Endpoints bypass the internet completely for free
-    """
+@router.post("/route-packet", summary="Trace Packet Route (IGW vs NAT Gateway vs VPC Endpoints)")
+def route_packet(request: PacketRouteRequest) -> Dict[str, Any]:
+    """Trace route of network packet."""
     return vpc_service.trace_packet_route(request)
 
 
-@router.get(
-    "/vpc-endpoints-guide",
-    summary="VPC Endpoints Guide: Gateway vs Interface (PrivateLink)",
-    response_model=VpcEndpointsGuideResponse
-)
-def get_vpc_endpoints_guide():
-    """Provides a clear breakdown comparing S3/DynamoDB Gateway Endpoints (free route table entries)
-    against Interface Endpoints powered by AWS PrivateLink.
-    """
+@router.get("/vpc-endpoints-guide", summary="VPC Endpoints Summary (Gateway vs Interface)")
+def get_vpc_endpoints_guide() -> Dict[str, Any]:
+    """Summary of VPC Gateway and Interface Endpoints."""
     return vpc_service.get_vpc_endpoints_guide()

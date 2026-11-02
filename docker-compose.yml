@@ -1,38 +1,14 @@
-services:
-  # Fast-API AWS Training Application
-  aws-training-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: aws-cloud-training-lab
-    ports:
-      - "8000:8000"
-    environment:
-      - APP_NAME=AWS Cloud Training Lab
-      - APP_ENV=development
-      - DEBUG=true
-      - AWS_MOCK_MODE=true
-      - AWS_REGION=us-east-1
-      # To test against LocalStack, uncomment:
-      # - AWS_MOCK_MODE=false
-      # - LOCALSTACK_ENDPOINT_URL=http://localstack:4566
-    volumes:
-      # Mount workspace for live hot-reloading during development
-      - .:/app
-    restart: unless-stopped
-
-  # Optional: LocalStack for full offline local AWS emulation (boto3 endpoints)
-  # Run with: docker-compose up localstack
-  localstack:
-    image: localstack/localstack:latest
-    container_name: localstack-aws-emulator
-    ports:
-      - "4566:4566"
-    environment:
-      - SERVICES=s3,iam,sts,ssm,secretsmanager,cloudwatch,logs,ec2
-      - AWS_DEFAULT_REGION=us-east-1
-    volumes:
-      - "./localstack_data:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    profiles:
-      - localstack
+# ==========================================
+# TODO: Write your docker-compose.yml here
+# ==========================================
+# Suggested services:
+# 1. aws-training-api:
+#    - build context: .
+#    - ports: ["8000:8000"]
+#    - env_file: .env
+#    - volumes: [".:/app"]
+#
+# 2. (Optional) localstack:
+#    - image: localstack/localstack:latest
+#    - ports: ["4566:4566"]
+#    - environment: SERVICES=s3,iam,sts,ssm,secretsmanager,cloudwatch,logs,ec2
