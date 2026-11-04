@@ -1,14 +1,18 @@
 # ==========================================
 # TODO: Write your docker-compose.yml here
 # ==========================================
-# Suggested services:
-# 1. aws-training-api:
-#    - build context: .
+# Suggested services for local development:
+# 1. db (Local PostgreSQL):
+#    - image: postgres:16-alpine
+#    - environment:
+#        POSTGRES_USER: postgres
+#        POSTGRES_PASSWORD: postgres
+#        POSTGRES_DB: training_db
+#    - ports: ["5432:5432"]
+#    - volumes: ["postgres_data:/var/lib/postgresql/data"]
+#
+# 2. api (FastAPI App):
+#    - build: .
 #    - ports: ["8000:8000"]
 #    - env_file: .env
-#    - volumes: [".:/app"]
-#
-# 2. (Optional) localstack:
-#    - image: localstack/localstack:latest
-#    - ports: ["4566:4566"]
-#    - environment: SERVICES=s3,iam,sts,ssm,secretsmanager,cloudwatch,logs,ec2
+#    - depends_on: [db]

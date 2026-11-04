@@ -1,74 +1,55 @@
-# AWS Training Lab
+# AWS Training Lab (2-Endpoint Backend)
 
-I built this project to train myself on AWS core services and cloud architecture patterns. 
+I built this small backend project to train myself on connecting a Python/FastAPI application to PostgreSQL (AWS RDS) and AWS services, and practicing cloud infrastructure, Docker, and CI/CD around it.
 
-Rather than deploying a frontend, I am using FastAPI and Swagger UI (`/docs`) as my interactive testing console. This lets me write code for one single AWS service at a time, test it directly with real boto3 calls (or LocalStack), and build my intuition for cloud engineering step by step.
+Instead of building a large app or a frontend, I kept the codebase down to **2 endpoints** (`GET /health` and `POST/GET /items`) tested through FastAPI's Swagger UI (`/docs`). All the AWS and Docker connections are marked with `# TODO` so I can implement and test each piece myself.
 
-Others are welcome to look through or fork this project, but it is primarily my personal training workspace.
+## Project Layout
 
-## Current Status
-- **Status:** Skeleton & learning workspace.
-- Each module contains route declarations and Pydantic schemas, with service logic marked with `# TODO` so I can implement them myself.
-- When an endpoint is called before I implement it, the API cleanly returns `501 Not Implemented`.
-- Detailed study notes, concepts, and suggested boto3 calls are documented in [`LEARNING_PATH.md`](LEARNING_PATH.md).
+```text
+aws-cloud-training-lab/
+├── .github/workflows/
+│   └── ci.yml           # TODO: GitHub Actions (pytest -> AWS OIDC STS -> ECR push)
+├── main.py              # FastAPI app with /health and /items
+├── db.py                # TODO: SQLAlchemy connection & Item model for PostgreSQL / AWS RDS
+├── aws_services.py      # TODO: Boto3 integrations (STS identity, Secrets/SSM, S3, CloudWatch)
+├── test_main.py         # Pytest suite (starts with /health test gate)
+├── Dockerfile           # TODO: Multi-stage container build
+├── docker-compose.yml   # TODO: Local FastAPI + local PostgreSQL container
+├── LEARNING_PATH.md     # My step-by-step checklist for code & AWS console/CLI setup
+└── requirements.txt
+```
 
-## What I Am Covering & Priority
+## How the 2 Endpoints Cover My AWS Topics
 
-### High Priority
-- **IAM:** Authentication vs Authorization, IAM Users vs Roles, Policies & Permissions, Least Privilege, Temporary Credentials (STS), why hardcoded AWS keys are dangerous.
-- **EC2 & Security Groups:** Stateful Security Groups vs stateless NACLs, Instance Metadata Service v2 (IMDSv2) token flow, EC2 instance types and pricing models.
-- **Secrets & Environment Variables:** SSM Parameter Store (SecureString with KMS) vs AWS Secrets Manager (automated rotation) vs `.env` files.
+1. **`GET /health`**
+   - Checks that the API is alive, tests the PostgreSQL/RDS connection (`SELECT 1`), and calls AWS STS `get_caller_identity()`.
+   - **AWS topics applied:** Application Load Balancer (ALB) health checks, Fault Tolerance, IAM Roles & temporary STS credentials (no hardcoded AWS keys).
 
-### Medium Priority
-- **Amazon S3:** Bucket security (Block Public Access, Versioning, Encryption), Presigned URLs (direct client uploads without proxying bytes through the backend), Storage Classes & Lifecycle Rules.
-- **CloudWatch & Logs:** Structured JSON logging, custom metrics with dimensions, metric alarms and SNS alert flows.
-- **VPC Basics:** Subnets, CIDR notation (why AWS reserves 5 IP addresses per subnet), Internet Gateway vs NAT Gateway, and free S3 VPC Gateway Endpoints.
+2. **`POST /items` & `GET /items`**
+   - Saves an item (`name`, `description`) to **PostgreSQL / AWS RDS**, uploads an optional file to **Amazon S3** (with presigned URLs), fetches DB credentials from **Secrets Manager / SSM Parameter Store**, and sends structured logs + custom metrics to **Amazon CloudWatch**.
+   - **AWS topics applied:** S3 object storage, RDS Multi-AZ, Secrets Manager/SSM, CloudWatch Logs & Metrics, VPC private subnets, chained Security Groups (`ALB -> EC2 -> RDS`), and Auto Scaling Groups (HA & Elasticity).
 
-### Docker Refresher
-- Images vs Containers, Dockerfiles (multi-stage builds, non-root users, layer caching), container port mapping (`-p host:container`), persistent storage (volumes vs bind mounts), environment variables.
-
-### Low Priority / Advanced
-- **Advanced Compute & Orchestration:** ECS Task Definitions (Task Role vs Execution Role), EC2 vs ECS Fargate vs EKS decision matrix, Docker to Kubernetes mapping.
-
-## Relation to the Ataa Donation Platform
-This lab is directly modeled around the architecture I designed for the [Ataa Donation Platform](https://github.com/yzes95/Donation-Platform) and its [Backend](https://github.com/yzes95/Donation-Platform-Backend):
-- S3 presigned URLs in this lab mirror how Ataa allows donors and family representatives to upload medical documents directly to S3.
-- The IAM role and IMDSv2 exercises mirror how the EC2 backend accesses S3 and CloudWatch without hardcoded credentials.
-- The VPC and security group exercises mirror Ataa's private data subnets.
-
-## Progress Checklist
-- [ ] 1. IAM Users, Roles & Least Privilege Policies
-- [ ] 2. Environment Variables, SSM Parameter Store & Secrets Manager
-- [ ] 3. EC2, Security Groups & IMDSv2
-- [ ] 4. Amazon S3 Buckets, Uploads & Presigned URLs
-- [ ] 5. CloudWatch Logs, Custom Metrics & Alarms
-- [ ] 6. VPC, Subnets, Routing & Endpoints
-- [ ] 7. Dockerfile & Containerization
-- [ ] 8. ECS Fargate Task Definition
-
-## How I Run This Locally
+## How I Run It Locally
 
 1. Create and activate a virtual environment:
    ```bash
    python -m venv .venv
-   .venv\Scripts\activate   # Linux/macOS: source .venv/bin/activate
-   ```
-
-2. Install dependencies:
-   ```bash
+   .venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-3. Run the development server:
+2. Start the server:
    ```bash
    uvicorn main:app --reload --port 8000
    ```
 
-4. Open the Swagger UI interactive playground:
-   [http://localhost:8000/docs](http://localhost:8000/docs)
+3. Open Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
 
-5. (Optional) Run against LocalStack:
-   Set `LOCALSTACK_ENDPOINT_URL="http://localhost:4566"` in `.env`.
+4. Run tests:
+   ```bash
+   pytest test_main.py -v
+   ```
 
 ## License
 MIT

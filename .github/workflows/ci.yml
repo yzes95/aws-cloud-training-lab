@@ -1,0 +1,22 @@
+# =====================================================================
+# TODO: Write your GitHub Actions CI/CD workflow here
+# =====================================================================
+# How the pipeline should run on `git push origin main`:
+#
+# 1. Trigger:
+#    on:
+#      push:
+#        branches: [ main ]
+#
+# 2. Job 1 — Test Gate (Fail Fast):
+#    - Checkout code (`actions/checkout@v4`)
+#    - Set up Python 3.13 (`actions/setup-python@v5`)
+#    - Install requirements (`pip install -r requirements.txt`)
+#    - Run tests (`pytest test_main.py -v`)
+#
+# 3. Job 2 — Build & Push to AWS ECR using OIDC (No permanent AWS keys!):
+#    - Add `permissions: id-token: write` and `contents: read`
+#    - Authenticate to AWS via STS OIDC (`aws-actions/configure-aws-credentials@v4`
+#      with `role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsECRRole`)
+#    - Log into Amazon ECR (`aws-actions/amazon-ecr-login@v2`)
+#    - Build and push your `Dockerfile` image to ECR
